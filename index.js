@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
 */
 
-const chalk = require('chalk')
+const { bgRed, dim, red, yellow, green } = require('kleur')
 
 /**
  * Pulls the main frame from the frames stack
@@ -92,8 +92,8 @@ function whiteSpace (biggestChar, currentChar) {
  */
 function codeLine (line, counter, maxCounter, isMain) {
   const space = whiteSpace(String(maxCounter), String(counter))
-  const content = isMain ? chalk.bgRed.white(line) : line
-  return `${chalk.dim(counter)}${space}${content}`
+  const content = isMain ? bgRed().white(line) : line
+  return `${dim(counter)}${space}${content}`
 }
 
 /**
@@ -106,7 +106,7 @@ function codeLine (line, counter, maxCounter, isMain) {
  * @return {Array}
  */
 function getTitle (error) {
-  return [`${chalk.red(error.name)}: ${chalk.yellow(error.message)}\n`]
+  return [`${red(error.name)}: ${yellow(error.message)}\n`]
 }
 
 /**
@@ -122,7 +122,7 @@ function getMainFrameLocation (frame) {
   if (!frame) {
     return []
   }
-  return [`${chalk.dim('at')} ${chalk.green(frame.filePath)}${chalk.green(`(${frameMethod(frame)})`)}:${frame.line}`]
+  return [`${dim('at')} ${green(frame.filePath)}${green(`(${frameMethod(frame)})`)}:${frame.line}`]
 }
 
 /**
@@ -173,8 +173,8 @@ function getFramesInfo (frames) {
   return frames.map((frame, index) => {
     return [
       '',
-      `${chalk.dim(index+1)} ${chalk.yellow(frameMethod(frame))}`,
-      `  ${chalk.green(frame.filePath)}${':' + frame.line}`
+      `${dim(index+1)} ${yellow(frameMethod(frame))}`,
+      `  ${green(frame.filePath)}${':' + frame.line}`
     ].join('\n')
   })
 }
