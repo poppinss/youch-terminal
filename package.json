@@ -16,7 +16,7 @@
     "kleur": "^4.1.4"
   },
   "devDependencies": {
-    "youch": "^2.1.0"
+    "youch": "^2.2.0"
   },
   "repository": {
     "type": "git",
