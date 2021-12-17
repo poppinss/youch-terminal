@@ -9,7 +9,10 @@
  * file that was distributed with this source code.
 */
 
-const { bgRed, dim, red, yellow, green } = require('kleur')
+const { platform } = process
+const { bgRed, dim, yellow, green, white, red } = require('kleur')
+
+const POINTER = platform === 'win32' && !process.env.WT_SESSION ? '>' : '❯'
 
 /**
  * Pulls the main frame from the frames stack
@@ -37,7 +40,7 @@ function mainFrame (frames) {
  */
 function filterNativeFrames (frames, mainFrame) {
   return frames.filter((frame) => {
-    return !frame.isNative && (!mainFrame || frame.file !== mainFrame.file || frame.line !== mainFrame.line)
+    return (frame.isApp || frame.isModule) && (!mainFrame || frame.file !== mainFrame.file || frame.line !== mainFrame.line)
   })
 }
 
@@ -51,7 +54,7 @@ function filterNativeFrames (frames, mainFrame) {
  * @return {String}
  */
 function frameMethod (frame) {
-  return frame.method || 'anonymous'
+  return frame.callee || 'anonymous'
 }
 
 /**
@@ -92,8 +95,10 @@ function whiteSpace (biggestChar, currentChar) {
  */
 function codeLine (line, counter, maxCounter, isMain) {
   const space = whiteSpace(String(maxCounter), String(counter))
-  const content = isMain ? bgRed().white(line) : line
-  return `${dim(counter)}${space}${content}`
+  if (isMain) {
+    return ` ${red(POINTER)} ${red(counter)}${red('|')}${space}${red(line)}`
+  }
+  return `   ${dim(counter)}${dim('|')}${space}${line}`
 }
 
 /**
@@ -106,7 +111,14 @@ function codeLine (line, counter, maxCounter, isMain) {
  * @return {Array}
  */
 function getTitle (error) {
-  return [`${red(error.name)}: ${yellow(error.message)}\n`]
+  return [bgRed(white(` ${error.code ? error.code : ''}${error.name} \n`))]
+}
+
+/**
+ * Returns the error message
+ */
+function getMessage(error) {
+  return [` ${error.message} \n`]
 }
 
 /**
@@ -122,7 +134,7 @@ function getMainFrameLocation (frame) {
   if (!frame) {
     return []
   }
-  return [`${dim('at')} ${green(frame.filePath)}${green(`(${frameMethod(frame)})`)}:${frame.line}`]
+  return [` at ${yellow(`${frameMethod(frame)}`)} ${green(frame.filePath)}:${green(frame.line)}`]
 }
 
 /**
@@ -170,11 +182,14 @@ function getCodeLines (frame) {
  * @return {Array}
  */
 function getFramesInfo (frames) {
+  const totalFrames = String(frames.length)
   return frames.map((frame, index) => {
+    const frameNumber = String(index + 1)
+    const padding = frameNumber.padStart(totalFrames.length - frameNumber.length, '0')
     return [
       '',
-      `${dim(index+1)} ${yellow(frameMethod(frame))}`,
-      `  ${green(frame.filePath)}${':' + frame.line}`
+      `   ${dim(padding)}  ${yellow(frameMethod(frame))}`,
+      `${whiteSpace(padding, '')}   ${green(frame.filePath)}${':' + green(frame.line)}`
     ].join('\n')
   })
 }
@@ -197,6 +212,7 @@ module.exports = ({ error }) => {
 
   return ['']
     .concat(getTitle(error))
+    .concat(getMessage(error))
     .concat(getMainFrameLocation(firstFrame))
     .concat(getCodeLines(firstFrame))
     .concat(getFramesInfo(filterNativeFrames(error.frames, firstFrame)))
