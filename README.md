@@ -17,10 +17,7 @@ const Youch = require('youch')
 const forTerminal = require('youch-terminal')
 
 const error = new Error('Some weird error')
+const jsonResponse = await new Youch(error, {}).toJSON()
 
-new Youch(error, {})
-.toJSON()
-.then((output) => {
-  console.log(forTerminal(output))
-})
+console.log(forTerminal(output))
 ```
