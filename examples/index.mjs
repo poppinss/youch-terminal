@@ -9,8 +9,8 @@
  * file that was distributed with this source code.
 */
 
-const Youch = require('youch')
-const youchTerm = require('.')
+import Youch from 'youch'
+import youchTerm from '../index.js'
 
 function getUser () {
   throw new Error('Unable to find user')
