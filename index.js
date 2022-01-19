@@ -9,7 +9,8 @@
  * file that was distributed with this source code.
 */
 
-const { platform } = process
+const { platform, cwd } = process
+const { sep } = require('path')
 const { bgRed, dim, yellow, green, white, red } = require('kleur')
 
 const POINTER = platform === 'win32' && !process.env.WT_SESSION ? '>' : '❯'
@@ -93,12 +94,12 @@ function whiteSpace (biggestChar, currentChar) {
  *
  * @return {String}
  */
-function codeLine (line, counter, maxCounter, isMain) {
+function codeLine (line, counter, maxCounter, isMain, prefix) {
   const space = whiteSpace(String(maxCounter), String(counter))
   if (isMain) {
-    return ` ${red(POINTER)} ${red(counter)}${red('|')}${space}${red(line)}`
+    return `${prefix} ${red(POINTER)} ${red(counter)}${red('|')}${space}${red(line)}`
   }
-  return `   ${dim(counter)}${dim('|')}${space}${line}`
+  return `${prefix}   ${dim(counter)}${dim('|')}${space}${line}`
 }
 
 /**
@@ -110,15 +111,15 @@ function codeLine (line, counter, maxCounter, isMain) {
  *
  * @return {Array}
  */
-function getTitle (error) {
-  return [bgRed(white(` ${error.code ? error.code : ''}${error.name} \n`))]
+function getTitle (error, prefix) {
+  return [`${prefix} ${bgRed(white(` ${error.code ? error.code : ''}${error.name} `))}`, prefix]
 }
 
 /**
  * Returns the error message
  */
-function getMessage(error) {
-  return [` ${error.message} \n`]
+function getMessage(error, prefix) {
+  return [`${prefix} ${error.message}`, prefix]
 }
 
 /**
@@ -130,11 +131,13 @@ function getMessage(error) {
  *
  * @return {Array}
  */
-function getMainFrameLocation (frame) {
+function getMainFrameLocation (frame, prefix, displayShortPath) {
   if (!frame) {
     return []
   }
-  return [` at ${yellow(`${frameMethod(frame)}`)} ${green(frame.filePath)}:${green(frame.line)}`]
+
+  const filePath = displayShortPath ? frame.filePath.replace(`${cwd()}${sep}`, '') : frame.filePath
+  return [`${prefix} at ${yellow(`${frameMethod(frame)}`)} ${green(filePath)}:${green(frame.line)}`]
 }
 
 /**
@@ -146,7 +149,7 @@ function getMainFrameLocation (frame) {
  *
  * @return {Array}
  */
-function getCodeLines (frame) {
+function getCodeLines (frame, prefix) {
   if (!frame || !frame.context || !frame.context.line) {
     return []
   }
@@ -160,15 +163,15 @@ function getCodeLines (frame) {
   return []
   .concat(pre.map((line) => {
     counter++
-    return codeLine(line, counter, maxCounter)
+    return codeLine(line, counter, maxCounter, false, prefix)
   }))
   .concat([frame.context.line].map((line) => {
     counter++
-    return codeLine(line, counter, maxCounter, true)
+    return codeLine(line, counter, maxCounter, true, prefix)
   }))
   .concat(post.map((line) => {
     counter++
-    return codeLine(line, counter, maxCounter)
+    return codeLine(line, counter, maxCounter, false, prefix)
   }))
 }
 
@@ -181,15 +184,17 @@ function getCodeLines (frame) {
  *
  * @return {Array}
  */
-function getFramesInfo (frames) {
+function getFramesInfo (frames, prefix, displayShortPath) {
   const totalFrames = String(frames.length)
   return frames.map((frame, index) => {
     const frameNumber = String(index + 1)
     const padding = frameNumber.padStart(totalFrames.length - frameNumber.length, '0')
+    const filePath = displayShortPath ? frame.filePath.replace(`${cwd()}${sep}`, '') : frame.filePath
+
     return [
-      '',
-      `   ${dim(padding)}  ${yellow(frameMethod(frame))}`,
-      `${whiteSpace(padding, '')}   ${green(frame.filePath)}${':' + green(frame.line)}`
+      prefix,
+      `${prefix}   ${dim(padding)}  ${yellow(frameMethod(frame))}`,
+      `${prefix}${whiteSpace(padding, '')}   ${green(filePath)}${':' + green(frame.line)}`
     ].join('\n')
   })
 }
@@ -203,19 +208,23 @@ function getFramesInfo (frames) {
  *
  * @method
  *
- * @param  {Object} options.error
+ * @param  {Object} json.error
+ * @param {String} options.prefix
+ * @param {Boolean} options.displayShortPath
+ * @param {Boolean} options.hideErrorTitle
  *
  * @return {String}
  */
-module.exports = ({ error }) => {
+module.exports = ({ error }, options) => {
   const firstFrame = mainFrame(error.frames)
+  options = { prefix: '', ...options }
 
   return ['']
-    .concat(getTitle(error))
-    .concat(getMessage(error))
-    .concat(getMainFrameLocation(firstFrame))
-    .concat(getCodeLines(firstFrame))
-    .concat(getFramesInfo(filterNativeFrames(error.frames, firstFrame)))
+    .concat(options.hideErrorTitle ? [] : getTitle(error, options.prefix))
+    .concat(getMessage(error, options.prefix))
+    .concat(getMainFrameLocation(firstFrame, options.prefix, options.displayShortPath))
+    .concat(getCodeLines(firstFrame, options.prefix))
+    .concat(getFramesInfo(filterNativeFrames(error.frames, firstFrame), options.prefix, options.displayShortPath))
     .concat([''])
     .join('\n')
 }

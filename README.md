@@ -19,5 +19,16 @@ const forTerminal = require('youch-terminal')
 const error = new Error('Some weird error')
 const jsonResponse = await new Youch(error, {}).toJSON()
 
-console.log(forTerminal(output))
+const options = {
+  // Defaults to false
+  displayShortPath: false,
+
+  // Defaults to empty string
+  prefix: '',
+
+  // Defaults to false
+  hideErrorTitle: false
+}
+
+console.log(forTerminal(output, options))
 ```

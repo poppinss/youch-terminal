@@ -10,6 +10,7 @@
 */
 
 const Youch = require('youch')
+const { dim } = require('kleur')
 const youchTerm = require('..')
 
 function getUser () {
@@ -26,7 +27,7 @@ async function run () {
   }
 
   const output = await youch.toJSON()
-  console.log(youchTerm(output))
+  console.log(youchTerm(output, { displayShortPath: true, prefix: dim(' │ '), hideErrorTitle: false }))
 }
 
 run()
