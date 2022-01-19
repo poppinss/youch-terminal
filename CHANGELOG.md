@@ -1,3 +1,8 @@
+<a name="2.1.0"></a>
+# 2.1.0 (2021-01-19)
+
+- Allow options to tweak the output behavior
+
 <a name="2.0.1"></a>
 # 2.0.1 (2021-01-16)
 
