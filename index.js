@@ -212,6 +212,8 @@ function getFramesInfo (frames, prefix, displayShortPath) {
  * @param {String} options.prefix
  * @param {Boolean} options.displayShortPath
  * @param {Boolean} options.hideErrorTitle
+ * @param {Boolean} options.hideMessage
+ * @param {Boolean} options.displayMainFrameOnly
  *
  * @return {String}
  */
@@ -221,10 +223,18 @@ module.exports = ({ error }, options) => {
 
   return ['']
     .concat(options.hideErrorTitle ? [] : getTitle(error, options.prefix))
-    .concat(getMessage(error, options.prefix))
+    .concat(options.hideMessage ? [] : getMessage(error, options.prefix))
     .concat(getMainFrameLocation(firstFrame, options.prefix, options.displayShortPath))
     .concat(getCodeLines(firstFrame, options.prefix))
-    .concat(getFramesInfo(filterNativeFrames(error.frames, firstFrame), options.prefix, options.displayShortPath))
+    .concat(
+      options.displayMainFrameOnly
+        ? []
+        : getFramesInfo(
+            filterNativeFrames(error.frames, firstFrame),
+            options.prefix,
+            options.displayShortPath
+          )
+    )
     .concat([''])
     .join('\n')
 }

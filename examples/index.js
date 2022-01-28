@@ -27,7 +27,13 @@ async function run () {
   }
 
   const output = await youch.toJSON()
-  console.log(youchTerm(output, { displayShortPath: true, prefix: dim(' │ '), hideErrorTitle: false }))
+  console.log(youchTerm(output, {
+    displayShortPath: true,
+    prefix: dim(' │ '),
+    hideErrorTitle: false,
+    hideMessage: true,
+    displayMainFrameOnly: true,
+  }))
 }
 
 run()

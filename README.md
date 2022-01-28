@@ -28,6 +28,12 @@ const options = {
 
   // Defaults to false
   hideErrorTitle: false
+
+  // Defaults to false
+  hideMessage: false
+
+  // Defaults to false
+  displayMainFrameOnly: false
 }
 
 console.log(forTerminal(output, options))
