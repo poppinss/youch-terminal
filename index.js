@@ -72,7 +72,7 @@ function frameMethod (frame) {
  * @return {String}
  */
 function whiteSpace (biggestChar, currentChar) {
-  let whiteSpace = ' '
+  let whiteSpace = ''
   const whiteSpaceLength = biggestChar.length - currentChar.length
 
   for (let i = 0; i <= whiteSpaceLength; i++) {
@@ -97,9 +97,9 @@ function whiteSpace (biggestChar, currentChar) {
 function codeLine (line, counter, maxCounter, isMain, prefix) {
   const space = whiteSpace(String(maxCounter), String(counter))
   if (isMain) {
-    return `${prefix} ${red(POINTER)} ${red(counter)}${red('|')}${space}${red(line)}`
+    return `${prefix}${red(POINTER)}${space}${red(counter)}${red('|')}${space} ${red(line)}`
   }
-  return `${prefix}   ${dim(counter)}${dim('|')}${space}${line}`
+  return `${prefix} ${space}${dim(counter)}${dim('|')}${space} ${line}`
 }
 
 /**
