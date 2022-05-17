@@ -227,7 +227,7 @@ module.exports = ({ error }, options) => {
     .concat(getMainFrameLocation(firstFrame, options.prefix, options.displayShortPath))
     .concat(getCodeLines(firstFrame, options.prefix))
     .concat(
-      options.displayMainFrameOnly
+      options.displayMainFrameOnly && firstFrame
         ? []
         : getFramesInfo(
             filterNativeFrames(error.frames, firstFrame),
