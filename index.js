@@ -123,6 +123,18 @@ function getMessage(error, prefix) {
 }
 
 /**
+ * Get the relative path for a given file path, from the current working directory
+ * 
+ * @param  {String} filePath
+ * 
+ * @return {String}
+ */
+function getShortPath(filePath) {
+  const posixCwd = cwd().replace(/\\/g, '/')
+  return filePath.replace(`${posixCwd}/`, '')
+}
+
+/**
  * Returns the main frame location with line number
  *
  * @method getMainFrameLocation
@@ -136,7 +148,7 @@ function getMainFrameLocation (frame, prefix, displayShortPath) {
     return []
   }
 
-  const filePath = displayShortPath ? frame.filePath.replace(`${cwd()}${sep}`, '') : frame.filePath
+  const filePath = displayShortPath ? getShortPath(frame.filePath) : frame.filePath
   return [`${prefix} at ${yellow(`${frameMethod(frame)}`)} ${green(filePath)}:${green(frame.line)}`]
 }
 
@@ -189,7 +201,7 @@ function getFramesInfo (frames, prefix, displayShortPath) {
   return frames.map((frame, index) => {
     const frameNumber = String(index + 1)
     const padding = frameNumber.padStart(totalFrames.length - frameNumber.length, '0')
-    const filePath = displayShortPath ? frame.filePath.replace(`${cwd()}${sep}`, '') : frame.filePath
+    const filePath = displayShortPath ? getShortPath(frame.filePath) : frame.filePath
 
     return [
       prefix,
