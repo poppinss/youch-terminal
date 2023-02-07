@@ -27,16 +27,16 @@ const options = {
   prefix: ' ',
 
   // Defaults to false
-  hideErrorTitle: false
+  hideErrorTitle: false,
 
   // Defaults to false
-  hideMessage: false
+  hideMessage: false,
 
   // Defaults to false
-  displayMainFrameOnly: false
+  displayMainFrameOnly: false,
 
   // Defaults to 3
-  framesMaxLimit: 3
+  framesMaxLimit: 3,
 }
 
 console.log(forTerminal(output, options))
