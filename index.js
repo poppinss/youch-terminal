@@ -11,9 +11,13 @@
 
 const { platform, cwd } = process
 const { sep } = require('path')
-const { bgRed, dim, yellow, green, white, red } = require('kleur')
+const wordwrap = require('wordwrap')
+const stringWidth = require('string-width')
+const { dim, yellow, green, red, cyan } = require('kleur')
 
+const TERMINAL_SIZE = process.stdout.columns
 const POINTER = platform === 'win32' && !process.env.WT_SESSION ? '>' : '❯'
+const DASH = platform === 'win32' && !process.env.WT_SESSION ? '⁃' : '⁃'
 
 /**
  * Pulls the main frame from the frames stack
@@ -96,6 +100,7 @@ function whiteSpace (biggestChar, currentChar) {
  */
 function codeLine (line, counter, maxCounter, isMain, prefix) {
   const space = whiteSpace(String(maxCounter), String(counter))
+
   if (isMain) {
     return `${prefix}${red(POINTER)}${space}${red(counter)}${red('|')}${space} ${red(line)}`
   }
@@ -103,30 +108,47 @@ function codeLine (line, counter, maxCounter, isMain, prefix) {
 }
 
 /**
- * Returns the main error title
- *
- * @method getTitle
- *
- * @param  {Object} error
- *
- * @return {Array}
+ * Returns the error message
  */
-function getTitle (error, prefix) {
-  return [`${prefix} ${bgRed(white(` ${error.code ? error.code : ''}${error.name} `))}`, prefix]
+function getMessage(error, prefix, hideErrorTitle) {
+  let message
+
+  const wrapper = wordwrap(stringWidth(prefix) + 2, TERMINAL_SIZE)
+
+  if (!hideErrorTitle) {
+    message = `${prefix}  ${red(wrapper(`${error.name}: ${error.message}`).trim())}`
+  } else {
+    message = `${prefix}  ${red(wrapper(`${error.message}`).trim())}`
+  }
+
+  return [message, prefix]
 }
 
 /**
- * Returns the error message
+ * Returns the error help text
  */
-function getMessage(error, prefix) {
-  return [`${prefix} ${error.message}`, prefix]
+function getHelpText(error, prefix) {
+  const help = error.help
+  if (!help) {
+    return []
+  }
+
+  const wrapper = wordwrap(stringWidth(prefix) + 4, TERMINAL_SIZE)
+
+  if (Array.isArray(help)) {
+    return help.map((line) => {
+      return `${prefix}  ${cyan(wrapper(`- ${line}`).trim())}`
+    }).concat([prefix])
+  }
+
+  return [`${prefix}  ${cyan(help)}`, prefix]
 }
 
 /**
  * Get the relative path for a given file path, from the current working directory
- * 
+ *
  * @param  {String} filePath
- * 
+ *
  * @return {String}
  */
 function getShortPath(filePath) {
@@ -148,8 +170,8 @@ function getMainFrameLocation (frame, prefix, displayShortPath) {
     return []
   }
 
-  const filePath = displayShortPath ? getShortPath(frame.filePath) : frame.filePath
-  return [`${prefix} at ${yellow(`${frameMethod(frame)}`)} ${green(filePath)}:${green(frame.line)}`]
+  const filePath = displayShortPath ? frame.filePath.replace(`${cwd()}${sep}`, '') : frame.filePath
+  return [`${prefix}  at ${yellow(`${frameMethod(frame)}`)} ${green(filePath)}:${green(frame.line)}`]
 }
 
 /**
@@ -198,15 +220,16 @@ function getCodeLines (frame, prefix) {
  */
 function getFramesInfo (frames, prefix, displayShortPath) {
   const totalFrames = String(frames.length)
-  return frames.map((frame, index) => {
-    const frameNumber = String(index + 1)
-    const padding = frameNumber.padStart(totalFrames.length - frameNumber.length, '0')
-    const filePath = displayShortPath ? getShortPath(frame.filePath) : frame.filePath
+  const padding = whiteSpace(String(totalFrames.length), '')
+
+  return frames.map((frame) => {
+    const filePath = displayShortPath
+      ? frame.filePath.replace(`${cwd()}${sep}`, '')
+      : frame.filePath
 
     return [
-      prefix,
-      `${prefix}   ${dim(padding)}  ${yellow(frameMethod(frame))}`,
-      `${prefix}${whiteSpace(padding, '')}   ${green(filePath)}${':' + green(frame.line)}`
+      `${prefix}${padding}${yellow(`${DASH} ${frameMethod(frame)}`)}`,
+      `${prefix}${padding}  ${green(filePath)}${':' + green(frame.line)}`
     ].join('\n')
   })
 }
@@ -222,6 +245,7 @@ function getFramesInfo (frames, prefix, displayShortPath) {
  *
  * @param  {Object} json.error
  * @param {String} options.prefix
+ * @param {Number} options.framesMaxLimit
  * @param {Boolean} options.displayShortPath
  * @param {Boolean} options.hideErrorTitle
  * @param {Boolean} options.hideMessage
@@ -231,21 +255,26 @@ function getFramesInfo (frames, prefix, displayShortPath) {
  */
 module.exports = ({ error }, options) => {
   const firstFrame = mainFrame(error.frames)
-  options = { prefix: '', ...options }
+  options = { prefix: ' ', framesMaxLimit: 3, ...options }
+
+  const otherFrames = options.displayMainFrameOnly && firstFrame
+  ? []
+  : getFramesInfo(
+      filterNativeFrames(error.frames, firstFrame),
+      options.prefix,
+      options.displayShortPath
+    )
 
   return ['']
-    .concat(options.hideErrorTitle ? [] : getTitle(error, options.prefix))
-    .concat(options.hideMessage ? [] : getMessage(error, options.prefix))
+    .concat(options.hideMessage ? [] : getMessage(error, options.prefix, options.hideErrorTitle))
+    .concat(getHelpText(error, options.prefix))
     .concat(getMainFrameLocation(firstFrame, options.prefix, options.displayShortPath))
     .concat(getCodeLines(firstFrame, options.prefix))
+    .concat(otherFrames.length ? [''] : [])
     .concat(
-      options.displayMainFrameOnly && firstFrame
-        ? []
-        : getFramesInfo(
-            filterNativeFrames(error.frames, firstFrame),
-            options.prefix,
-            options.displayShortPath
-          )
+      Number.isFinite(options.framesMaxLimit)
+        ? otherFrames.slice(0, options.framesMaxLimit)
+        : otherFrames
     )
     .concat([''])
     .join('\n')

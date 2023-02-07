@@ -23,8 +23,8 @@ const options = {
   // Defaults to false
   displayShortPath: false,
 
-  // Defaults to empty string
-  prefix: '',
+  // Defaults to single whitspace
+  prefix: ' ',
 
   // Defaults to false
   hideErrorTitle: false
@@ -34,6 +34,9 @@ const options = {
 
   // Defaults to false
   displayMainFrameOnly: false
+
+  // Defaults to 3
+  framesMaxLimit: 3
 }
 
 console.log(forTerminal(output, options))

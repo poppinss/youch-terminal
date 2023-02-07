@@ -14,7 +14,13 @@ const { dim } = require('kleur')
 const youchTerm = require('..')
 
 function getUser () {
-  throw new Error('Unable to find user')
+  const error = new Error('Unable to find user')
+  error.help = [
+    'We tried looking for using inside the "users" table',
+    'The search was performed using the where (email = user.email) and (is_active = true)'
+  ]
+
+  throw error
 }
 
 async function run () {
@@ -29,10 +35,9 @@ async function run () {
   const output = await youch.toJSON()
   console.log(youchTerm(output, {
     displayShortPath: true,
-    prefix: dim(' │ '),
     hideErrorTitle: false,
-    hideMessage: true,
-    displayMainFrameOnly: true,
+    hideMessage: false,
+    displayMainFrameOnly: false,
   }))
 }
 
