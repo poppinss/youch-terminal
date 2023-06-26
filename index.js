@@ -104,7 +104,7 @@ function codeLine (line, counter, maxCounter, isMain, prefix) {
   if (isMain) {
     return `${prefix}${red(POINTER)}${space}${red(counter)}${red('|')}${space} ${red(line)}`
   }
-  return `${prefix} ${space}${dim(counter)}${dim('|')}${space} ${line}`
+  return `${prefix} ${space}${dim(counter)}${dim('|')}${space} ${dim(line)}`
 }
 
 /**
