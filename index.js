@@ -10,14 +10,25 @@
 */
 
 const { platform, cwd } = process
-const { sep } = require('path')
 const wordwrap = require('wordwrap')
+const { fileURLToPath } = require('url')
+const { sep, relative } = require('path')
 const stringWidth = require('string-width')
 const { dim, yellow, green, red, cyan } = require('kleur')
 
 const TERMINAL_SIZE = process.stdout.columns
 const POINTER = platform === 'win32' && !process.env.WT_SESSION ? '>' : '❯'
 const DASH = platform === 'win32' && !process.env.WT_SESSION ? '⁃' : '⁃'
+const CWD = cwd()
+
+function getRelativePath(filePath) {
+  /**
+   * Node.js error stack is all messed up. Some lines have file info
+   * enclosed in parenthesis and some are not
+   */
+  filePath = filePath.replace('async file:', 'file:')
+  return relative(CWD, filePath.startsWith('file:') ? fileURLToPath(filePath) : filePath)
+}
 
 /**
  * Pulls the main frame from the frames stack
@@ -128,7 +139,7 @@ function getMessage(error, prefix, hideErrorTitle) {
  * Returns the error help text
  */
 function getHelpText(error, prefix) {
-  const help = error.help
+  let help = error.help
   if (!help) {
     return []
   }
@@ -170,7 +181,7 @@ function getMainFrameLocation (frame, prefix, displayShortPath) {
     return []
   }
 
-  const filePath = displayShortPath ? frame.filePath.replace(`${cwd()}${sep}`, '') : frame.filePath
+  const filePath = displayShortPath ? getRelativePath(frame.filePath) : frame.filePath
   return [`${prefix}  at ${yellow(`${frameMethod(frame)}`)} ${green(filePath)}:${green(frame.line)}`]
 }
 
@@ -224,7 +235,7 @@ function getFramesInfo (frames, prefix, displayShortPath) {
 
   return frames.map((frame) => {
     const filePath = displayShortPath
-      ? frame.filePath.replace(`${cwd()}${sep}`, '')
+      ? getRelativePath(frame.filePath)
       : frame.filePath
 
     return [
