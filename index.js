@@ -15,6 +15,8 @@ const { fileURLToPath } = require('url')
 const { sep, relative } = require('path')
 const stringWidth = require('string-width')
 const { dim, yellow, green, red, cyan } = require('kleur')
+const { error } = require('console')
+const { inspect } = require('util')
 
 const TERMINAL_SIZE = process.stdout.columns
 const POINTER = platform === 'win32' && !process.env.WT_SESSION ? '>' : '❯'
@@ -245,6 +247,17 @@ function getFramesInfo (frames, prefix, displayShortPath) {
   })
 }
 
+function getErrorCause(errorCause, prefix) {
+  return [
+    '',
+    `${prefix} ${cyan('[cause] {')}`,
+    inspect(errorCause).split('\n').map((line) => {
+      return `${prefix}    ${cyan(line)}`
+    }).join('\n'),
+    `${prefix} ${cyan('}')}`
+  ]
+}
+
 /**
  * Returns a multi-line string all ready to be printed
  * on console.
@@ -281,6 +294,7 @@ module.exports = ({ error }, options) => {
     .concat(getHelpText(error, options.prefix))
     .concat(getMainFrameLocation(firstFrame, options.prefix, options.displayShortPath))
     .concat(getCodeLines(firstFrame, options.prefix))
+    .concat(error.cause ? getErrorCause(error.cause, options.prefix) : [])
     .concat(otherFrames.length ? [''] : [])
     .concat(
       Number.isFinite(options.framesMaxLimit)

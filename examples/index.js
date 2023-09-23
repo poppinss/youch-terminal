@@ -14,7 +14,9 @@ const { dim } = require('kleur')
 const youchTerm = require('..')
 
 function getUser () {
-  const error = new Error('Unable to find user')
+  const error = new Error('Unable to find user', {
+    cause: new Error('foo')
+  })
   error.help = [
     'We tried looking for using inside the "users" table',
     'The search was performed using the where (email = user.email) and (is_active = true)'
