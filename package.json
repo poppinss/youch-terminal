@@ -18,7 +18,7 @@
     "wordwrap": "^1.0.0"
   },
   "devDependencies": {
-    "youch": "^3.2.3"
+    "youch": "^3.3.2"
   },
   "repository": {
     "type": "git",
