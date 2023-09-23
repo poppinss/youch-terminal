@@ -10,13 +10,12 @@
 */
 
 const { platform, cwd } = process
+const { inspect } = require('util')
 const wordwrap = require('wordwrap')
+const { relative } = require('path')
 const { fileURLToPath } = require('url')
-const { sep, relative } = require('path')
 const stringWidth = require('string-width')
 const { dim, yellow, green, red, cyan } = require('kleur')
-const { error } = require('console')
-const { inspect } = require('util')
 
 const TERMINAL_SIZE = process.stdout.columns
 const POINTER = platform === 'win32' && !process.env.WT_SESSION ? '>' : '❯'
