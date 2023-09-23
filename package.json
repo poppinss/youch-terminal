@@ -1,6 +1,6 @@
 {
   "name": "youch-terminal",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "description": "Show youch error on terminal",
   "main": "index.js",
   "files": [
